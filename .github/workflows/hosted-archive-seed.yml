@@ -1,4 +1,4 @@
-name: hosted-seed-c3fa7942
+name: hosted-seed-7b86a938
 run-name: ${{ inputs.attempt }}
 on:
   workflow_dispatch:
@@ -119,7 +119,7 @@ jobs:
       - name: Download preregistered archive with OIDC
         shell: node {0}
         env:
-          ARCHIVE_DIGEST: 284bad3e4d851ebb4c2d007a7acf777f4b4cace8f0c2ad5cdd0d1867425f7666
+          ARCHIVE_DIGEST: 24b11ed9dba74aaa74f6f559323d2eb3f71da5d37287ec6be0fe7be6f9bb3816
           COMMITISH_COLLECTOR: https://evidence.commitish.kjanat.dev
           COMMITISH_EXPERIMENT: ${{ inputs.experiment }}
         run: |
@@ -142,30 +142,48 @@ jobs:
             if (digest !== process.env.ARCHIVE_DIGEST) throw new Error('Archive digest mismatch');
             require('node:fs').writeFileSync('commitish-seed.tar.gz', bytes, { mode: 0o600 });
           })().catch(error => { console.error(error.message); process.exitCode = 1; });
-      - name: Install marked checkout tree behind runner watermark
+      - name: Install marked archive in the hosted runner archive cache
+        shell: node {0}
         env:
-          CHECKOUT_COMMIT: 3d3c42e5aac5ba805825da76410c181273ba90b1
-          ENTRY_PATH: dist/index.js
-          ENTRY_DIGEST: 84646e0946a4fc16b948a11b14650a3ce84865dbece7237aaf82bd7d855d5434
+          ARCHIVE_DIGEST: 24b11ed9dba74aaa74f6f559323d2eb3f71da5d37287ec6be0fe7be6f9bb3816
+          CACHE_KEY: actions_checkout/3d3c42e5aac5ba805825da76410c181273ba90b1.tar.gz
         run: |
-          set -euo pipefail
-          actions_root="$(dirname "$RUNNER_WORKSPACE")/_actions"
-          destination="$actions_root/actions/checkout/$CHECKOUT_COMMIT"
-          test ! -e "$destination"
-          test ! -e "$destination.completed"
-          staging="$(mktemp -d)"
-          tar -xzf commitish-seed.tar.gz -C "$staging"
-          mkdir -p "$(dirname "$destination")"
-          mv "$staging/checkout" "$destination"
-          test "$(sha256sum "$destination/$ENTRY_PATH" | cut -d' ' -f1)" = "$ENTRY_DIGEST"
-          : > "$destination.completed"
+          const crypto = require('node:crypto');
+          const fs = require('node:fs');
+          const path = require('node:path');
+          const root = process.env.ACTIONS_RUNNER_ACTION_ARCHIVE_CACHE;
+          if (!root || !path.isAbsolute(root)) throw new Error('Hosted archive cache is unavailable');
+          const resolvedRoot = path.resolve(root);
+          const destination = path.resolve(resolvedRoot, process.env.CACHE_KEY);
+          if (!destination.startsWith(resolvedRoot + path.sep)) throw new Error('Cache key escapes hosted archive cache');
+          fs.accessSync(resolvedRoot, fs.constants.R_OK | fs.constants.W_OK);
+          const bytes = fs.readFileSync('commitish-seed.tar.gz');
+          const digest = crypto.createHash('sha256').update(bytes).digest('hex');
+          if (digest !== process.env.ARCHIVE_DIGEST) throw new Error('Seed archive changed before cache installation');
+          const previous = fs.existsSync(destination)
+            ? crypto.createHash('sha256').update(fs.readFileSync(destination)).digest('hex')
+            : null;
+          fs.mkdirSync(path.dirname(destination), { recursive: true });
+          const temporary = destination + '.commitish-' + crypto.randomUUID();
+          fs.writeFileSync(temporary, bytes, { flag: 'wx', mode: 0o600 });
+          fs.renameSync(temporary, destination);
+          const installed = crypto.createHash('sha256').update(fs.readFileSync(destination)).digest('hex');
+          if (installed !== process.env.ARCHIVE_DIGEST) throw new Error('Hosted archive cache readback differs');
+          const result = {
+            version: 1,
+            cacheKey: process.env.CACHE_KEY,
+            previousSha256: previous,
+            installedSha256: installed,
+            bytes: bytes.length
+          };
+          console.log('COMMITISH_HOSTED_CACHE_SEED=' + Buffer.from(JSON.stringify(result)).toString('base64url'));
       - name: Register authenticated seed provenance
         env:
           COMMITISH_COLLECTOR: https://evidence.commitish.kjanat.dev
           COMMITISH_EXPERIMENT: ${{ inputs.experiment }}
         run: |
           node --input-type=commonjs <<'COMMITISH_SEED_NODE'
-          const seed = {"protocol":1,"originId":"c3fa7942-2ff1-4fdc-b75f-291b91ada75c","officialRepository":"actions/checkout","officialCommit":"3d3c42e5aac5ba805825da76410c181273ba90b1","pristineArchiveSha256":"ed255b2a39e4a6e37891d9983deed7e92376b60f1689c73d587495fdf97b3f89","instrumentedArchiveSha256":"284bad3e4d851ebb4c2d007a7acf777f4b4cace8f0c2ad5cdd0d1867425f7666","upstreamEntryPath":"dist/index.js","upstreamEntrySha256":"b604bf1c08a471aedf51ddddbd3e8d03041683db270692d66cd1b4b097457818","instrumentedEntrySha256":"84646e0946a4fc16b948a11b14650a3ce84865dbece7237aaf82bd7d855d5434","instrumenterSourceSha256":"5e6d584fbf9ccef2223380ad9dd6b3e2f670a93d2a779f75b12421f0491e1360","cacheKey":"actions_checkout/3d3c42e5aac5ba805825da76410c181273ba90b1.tar.gz","allowlistedRepositories":["kajaux/action-ref-propagation-lab","kjanat/action-ref-propagation-lab"],"installation":"trusted-job"};
+          const seed = {"protocol":1,"originId":"7b86a938-9486-4391-b6b0-14e2257aacc9","officialRepository":"actions/checkout","officialCommit":"3d3c42e5aac5ba805825da76410c181273ba90b1","pristineArchiveSha256":"ed255b2a39e4a6e37891d9983deed7e92376b60f1689c73d587495fdf97b3f89","instrumentedArchiveSha256":"24b11ed9dba74aaa74f6f559323d2eb3f71da5d37287ec6be0fe7be6f9bb3816","upstreamEntryPath":"dist/index.js","upstreamEntrySha256":"b604bf1c08a471aedf51ddddbd3e8d03041683db270692d66cd1b4b097457818","instrumentedEntrySha256":"ec0b8079dbf7c7e0f4aeb58681bbf055575d33ae803cc0bf576ae86df16afa6f","instrumenterSourceSha256":"619981891d37ef731172b1a321e5d7f26fe5f4242177dd147d6b45142e2155c3","cacheKey":"actions_checkout/3d3c42e5aac5ba805825da76410c181273ba90b1.tar.gz","allowlistedRepositories":["kajaux/action-ref-propagation-lab","kjanat/action-ref-propagation-lab"],"installation":"trusted-job"};
           (async () => {
             const endpoint = new URL(process.env.COMMITISH_COLLECTOR);
             if (endpoint.protocol !== 'https:' || endpoint.origin !== process.env.COMMITISH_COLLECTOR) throw new Error('Invalid collector');
@@ -206,6 +224,15 @@ jobs:
         run: |
           mkdir -p .commitish-late-checkout
           printf '%s' "$DEFINITION" | base64 --decode > .commitish-late-checkout/action.yml
+      - name: Create victim-only execution nonce
+        shell: node {0}
+        run: |
+          const crypto = require('node:crypto');
+          const fs = require('node:fs');
+          const nonce = crypto.randomBytes(32).toString('hex');
+          const digest = crypto.createHash('sha256').update(nonce).digest('hex');
+          fs.appendFileSync(process.env.GITHUB_ENV, 'COMMITISH_OBSERVER_NONCE=' + nonce + '\n');
+          console.log('COMMITISH_OBSERVER_NONCE_SHA256=' + digest);
       - name: Execute delayed checkout dependency
         uses: ./.commitish-late-checkout
       - name: Record successful control execution
