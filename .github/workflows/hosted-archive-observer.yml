@@ -64,6 +64,7 @@ jobs:
               'completed'
             ].includes(phase ?? '')) throw new Error('Invalid reporting phase');
             if (marker && !/^[ABC]$/.test(marker)) throw new Error('Invalid observed marker');
+            const nonceSha256 = phase === 'completed' && env.COMMITISH_OBSERVER_NONCE ? Buffer.from(await crypto.subtle.digest('SHA-256', Buffer.from(env.COMMITISH_OBSERVER_NONCE))).toString('hex') : null;
             const event = {
               version: 1,
               id: crypto.randomUUID(),
@@ -75,7 +76,8 @@ jobs:
               observedAt: new Date().toISOString(),
               data: {
                 marker: marker ?? null,
-                status: env.COMMITISH_STATUS ?? null
+                status: env.COMMITISH_STATUS ?? null,
+                nonceSha256
               }
             };
             // Keep the same event identity on transient errors/lost acknowledgements.
@@ -130,7 +132,6 @@ jobs:
           const nonce = crypto.randomBytes(32).toString('hex');
           const digest = crypto.createHash('sha256').update(nonce).digest('hex');
           fs.appendFileSync(process.env.GITHUB_ENV, 'COMMITISH_OBSERVER_NONCE=' + nonce + '\n');
-          console.log('COMMITISH_OBSERVER_NONCE_SHA256=' + digest);
       - name: Execute exact official checkout object
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
         with:
@@ -177,6 +178,7 @@ jobs:
               'completed'
             ].includes(phase ?? '')) throw new Error('Invalid reporting phase');
             if (marker && !/^[ABC]$/.test(marker)) throw new Error('Invalid observed marker');
+            const nonceSha256 = phase === 'completed' && env.COMMITISH_OBSERVER_NONCE ? Buffer.from(await crypto.subtle.digest('SHA-256', Buffer.from(env.COMMITISH_OBSERVER_NONCE))).toString('hex') : null;
             const event = {
               version: 1,
               id: crypto.randomUUID(),
@@ -188,7 +190,8 @@ jobs:
               observedAt: new Date().toISOString(),
               data: {
                 marker: marker ?? null,
-                status: env.COMMITISH_STATUS ?? null
+                status: env.COMMITISH_STATUS ?? null,
+                nonceSha256
               }
             };
             // Keep the same event identity on transient errors/lost acknowledgements.
