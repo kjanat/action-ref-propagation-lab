@@ -131,6 +131,7 @@ jobs:
           const fs = require('node:fs');
           const nonce = crypto.randomBytes(32).toString('hex');
           const digest = crypto.createHash('sha256').update(nonce).digest('hex');
+          console.log('::add-mask::' + nonce);
           fs.appendFileSync(process.env.GITHUB_ENV, 'COMMITISH_OBSERVER_NONCE=' + nonce + '\n');
       - name: Execute exact official checkout object
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
