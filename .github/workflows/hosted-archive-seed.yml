@@ -1,4 +1,4 @@
-name: hosted-seed-f58d5c8d
+name: hosted-seed-c3fa7942
 run-name: ${{ inputs.attempt }}
 on:
   workflow_dispatch:
@@ -31,95 +31,95 @@ jobs:
           COMMITISH_MARKER: 
         run: |
           (async function reportJob(env, fetcher = fetch) {
-  const endpointURL = new URL(env.COMMITISH_COLLECTOR ?? 'https://commitish.kjanat.dev');
-  if (endpointURL.protocol !== 'https:' || endpointURL.username || endpointURL.password || endpointURL.pathname !== '/' || endpointURL.search || endpointURL.hash) throw new Error('Collector must be an HTTPS origin');
-  const endpoint = endpointURL.origin;
-  const experiment = env.COMMITISH_EXPERIMENT ?? '';
-  if (!/^[a-f0-9-]{36}$/.test(experiment)) throw new Error('Invalid experiment ID');
-  const requestURL = new URL(env.ACTIONS_ID_TOKEN_REQUEST_URL ?? '');
-  if (requestURL.protocol !== 'https:') throw new Error('OIDC request must use HTTPS');
-  requestURL.searchParams.set('audience', endpoint);
-  const identityResponse = await fetcher(requestURL, {
-    headers: {
-      authorization: `Bearer ${env.ACTIONS_ID_TOKEN_REQUEST_TOKEN}`
-    },
-    redirect: 'error',
-    signal: AbortSignal.timeout(10_000)
-  });
-  if (!identityResponse.ok) throw new Error(`GitHub OIDC request failed: HTTP ${identityResponse.status}`);
-  const { value: token } = await identityResponse.json();
-  if (typeof token !== 'string') throw new Error('GitHub returned no OIDC token');
-  // Unverified decoding only supplies event fields; the server verifies the signed identity.
-  const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
-  const phase = env.COMMITISH_PHASE;
-  const marker = env.COMMITISH_MARKER;
-  if (![
-    'started',
-    'completed'
-  ].includes(phase ?? '')) throw new Error('Invalid reporting phase');
-  if (marker && !/^[ABC]$/.test(marker)) throw new Error('Invalid observed marker');
-  const event = {
-    version: 1,
-    id: crypto.randomUUID(),
-    producer: `github.${claims.run_id}.${claims.run_attempt}.${claims.check_run_id}`,
-    sequence: phase === 'started' ? 0 : 1,
-    caseId: env.COMMITISH_CASE,
-    attempt: `${claims.run_id}:${claims.run_attempt}`,
-    kind: `job.${phase}`,
-    observedAt: new Date().toISOString(),
-    data: {
-      marker: marker ?? null,
-      status: env.COMMITISH_STATUS ?? null
-    }
-  };
-  // Keep the same event identity on transient errors/lost acknowledgements.
-  for(let attempt = 0; attempt < 12; attempt++){
-    let status = 0;
-    try {
-      const response = await fetcher(`${endpoint}/v1/experiments/${experiment}/events`, {
-        method: 'POST',
-        headers: {
-          authorization: `Bearer ${token}`,
-          'content-type': 'application/json'
-        },
-        body: JSON.stringify(event),
-        redirect: 'error',
-        signal: AbortSignal.timeout(10_000)
-      });
-      status = response.status;
-      if (response.ok) {
-        const receipt = await response.json();
-        if (receipt.id !== event.id) throw new Error('Collector receipt mismatch');
-        console.log(`Collector acknowledged ${event.kind} for ${event.caseId}`);
-        return;
-      }
-      await response.body?.cancel();
-    } catch (error) {
-      if (status !== 0) throw error;
-    }
-    // 403 briefly occurs while the controller registers the freshly dispatched run.
-    if (![
-      0,
-      403,
-      429,
-      500,
-      502,
-      503,
-      504
-    ].includes(status)) {
-      throw new Error(`Collector rejected job event: HTTP ${status}`);
-    }
-    if (attempt === 11) throw new Error(`Collector unavailable or grant missing: HTTP ${status}`);
-    await new Promise((resolve)=>setTimeout(resolve, 2000));
-  }
-})(process.env).catch(() => {
+            const endpointURL = new URL(env.COMMITISH_COLLECTOR ?? 'https://commitish.kjanat.dev');
+            if (endpointURL.protocol !== 'https:' || endpointURL.username || endpointURL.password || endpointURL.pathname !== '/' || endpointURL.search || endpointURL.hash) throw new Error('Collector must be an HTTPS origin');
+            const endpoint = endpointURL.origin;
+            const experiment = env.COMMITISH_EXPERIMENT ?? '';
+            if (!/^[a-f0-9-]{36}$/.test(experiment)) throw new Error('Invalid experiment ID');
+            const requestURL = new URL(env.ACTIONS_ID_TOKEN_REQUEST_URL ?? '');
+            if (requestURL.protocol !== 'https:') throw new Error('OIDC request must use HTTPS');
+            requestURL.searchParams.set('audience', endpoint);
+            const identityResponse = await fetcher(requestURL, {
+              headers: {
+                authorization: `Bearer ${env.ACTIONS_ID_TOKEN_REQUEST_TOKEN}`
+              },
+              redirect: 'error',
+              signal: AbortSignal.timeout(10_000)
+            });
+            if (!identityResponse.ok) throw new Error(`GitHub OIDC request failed: HTTP ${identityResponse.status}`);
+            const { value: token } = await identityResponse.json();
+            if (typeof token !== 'string') throw new Error('GitHub returned no OIDC token');
+            // Unverified decoding only supplies event fields; the server verifies the signed identity.
+            const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
+            const phase = env.COMMITISH_PHASE;
+            const marker = env.COMMITISH_MARKER;
+            if (![
+              'started',
+              'completed'
+            ].includes(phase ?? '')) throw new Error('Invalid reporting phase');
+            if (marker && !/^[ABC]$/.test(marker)) throw new Error('Invalid observed marker');
+            const event = {
+              version: 1,
+              id: crypto.randomUUID(),
+              producer: `github.${claims.run_id}.${claims.run_attempt}.${claims.check_run_id}`,
+              sequence: phase === 'started' ? 0 : 1,
+              caseId: env.COMMITISH_CASE,
+              attempt: `${claims.run_id}:${claims.run_attempt}`,
+              kind: `job.${phase}`,
+              observedAt: new Date().toISOString(),
+              data: {
+                marker: marker ?? null,
+                status: env.COMMITISH_STATUS ?? null
+              }
+            };
+            // Keep the same event identity on transient errors/lost acknowledgements.
+            for(let attempt = 0; attempt < 12; attempt++){
+              let status = 0;
+              try {
+                const response = await fetcher(`${endpoint}/v1/experiments/${experiment}/events`, {
+                  method: 'POST',
+                  headers: {
+                    authorization: `Bearer ${token}`,
+                    'content-type': 'application/json'
+                  },
+                  body: JSON.stringify(event),
+                  redirect: 'error',
+                  signal: AbortSignal.timeout(10_000)
+                });
+                status = response.status;
+                if (response.ok) {
+                  const receipt = await response.json();
+                  if (receipt.id !== event.id) throw new Error('Collector receipt mismatch');
+                  console.log(`Collector acknowledged ${event.kind} for ${event.caseId}`);
+                  return;
+                }
+                await response.body?.cancel();
+              } catch (error) {
+                if (status !== 0) throw error;
+              }
+              // 403 briefly occurs while the controller registers the freshly dispatched run.
+              if (![
+                0,
+                403,
+                429,
+                500,
+                502,
+                503,
+                504
+              ].includes(status)) {
+                throw new Error(`Collector rejected job event: HTTP ${status}`);
+              }
+              if (attempt === 11) throw new Error(`Collector unavailable or grant missing: HTTP ${status}`);
+              await new Promise((resolve)=>setTimeout(resolve, 2000));
+            }
+          })(process.env).catch(() => {
             console.error('Direct collector reporting failed');
             process.exitCode = 1;
           });
       - name: Download preregistered archive with OIDC
         shell: node {0}
         env:
-          ARCHIVE_DIGEST: dc22c73568b41105730e21945f038df880061ab2af5e2770e2fa07668f29e126
+          ARCHIVE_DIGEST: 284bad3e4d851ebb4c2d007a7acf777f4b4cace8f0c2ad5cdd0d1867425f7666
           COMMITISH_COLLECTOR: https://evidence.commitish.kjanat.dev
           COMMITISH_EXPERIMENT: ${{ inputs.experiment }}
         run: |
@@ -146,7 +146,7 @@ jobs:
         env:
           CHECKOUT_COMMIT: 3d3c42e5aac5ba805825da76410c181273ba90b1
           ENTRY_PATH: dist/index.js
-          ENTRY_DIGEST: c2568d91ca0646a548919385f2e9badbccecd114fe2f36eb27256cfe201dbdde
+          ENTRY_DIGEST: 84646e0946a4fc16b948a11b14650a3ce84865dbece7237aaf82bd7d855d5434
         run: |
           set -euo pipefail
           actions_root="$(dirname "$RUNNER_WORKSPACE")/_actions"
@@ -165,7 +165,7 @@ jobs:
           COMMITISH_EXPERIMENT: ${{ inputs.experiment }}
         run: |
           node --input-type=commonjs <<'COMMITISH_SEED_NODE'
-          const seed = {"protocol":1,"originId":"f58d5c8d-e059-4742-9878-d6ac2afac9fd","officialRepository":"actions/checkout","officialCommit":"3d3c42e5aac5ba805825da76410c181273ba90b1","pristineArchiveSha256":"ed255b2a39e4a6e37891d9983deed7e92376b60f1689c73d587495fdf97b3f89","instrumentedArchiveSha256":"dc22c73568b41105730e21945f038df880061ab2af5e2770e2fa07668f29e126","upstreamEntryPath":"dist/index.js","upstreamEntrySha256":"b604bf1c08a471aedf51ddddbd3e8d03041683db270692d66cd1b4b097457818","instrumentedEntrySha256":"c2568d91ca0646a548919385f2e9badbccecd114fe2f36eb27256cfe201dbdde","instrumenterSourceSha256":"5e6d584fbf9ccef2223380ad9dd6b3e2f670a93d2a779f75b12421f0491e1360","cacheKey":"actions_checkout/3d3c42e5aac5ba805825da76410c181273ba90b1.tar.gz","allowlistedRepositories":["kajaux/action-ref-propagation-lab","kjanat/action-ref-propagation-lab"],"installation":"trusted-job"};
+          const seed = {"protocol":1,"originId":"c3fa7942-2ff1-4fdc-b75f-291b91ada75c","officialRepository":"actions/checkout","officialCommit":"3d3c42e5aac5ba805825da76410c181273ba90b1","pristineArchiveSha256":"ed255b2a39e4a6e37891d9983deed7e92376b60f1689c73d587495fdf97b3f89","instrumentedArchiveSha256":"284bad3e4d851ebb4c2d007a7acf777f4b4cace8f0c2ad5cdd0d1867425f7666","upstreamEntryPath":"dist/index.js","upstreamEntrySha256":"b604bf1c08a471aedf51ddddbd3e8d03041683db270692d66cd1b4b097457818","instrumentedEntrySha256":"84646e0946a4fc16b948a11b14650a3ce84865dbece7237aaf82bd7d855d5434","instrumenterSourceSha256":"5e6d584fbf9ccef2223380ad9dd6b3e2f670a93d2a779f75b12421f0491e1360","cacheKey":"actions_checkout/3d3c42e5aac5ba805825da76410c181273ba90b1.tar.gz","allowlistedRepositories":["kajaux/action-ref-propagation-lab","kjanat/action-ref-propagation-lab"],"installation":"trusted-job"};
           (async () => {
             const endpoint = new URL(process.env.COMMITISH_COLLECTOR);
             if (endpoint.protocol !== 'https:' || endpoint.origin !== process.env.COMMITISH_COLLECTOR) throw new Error('Invalid collector');
@@ -222,88 +222,88 @@ jobs:
           COMMITISH_MARKER: C
         run: |
           (async function reportJob(env, fetcher = fetch) {
-  const endpointURL = new URL(env.COMMITISH_COLLECTOR ?? 'https://commitish.kjanat.dev');
-  if (endpointURL.protocol !== 'https:' || endpointURL.username || endpointURL.password || endpointURL.pathname !== '/' || endpointURL.search || endpointURL.hash) throw new Error('Collector must be an HTTPS origin');
-  const endpoint = endpointURL.origin;
-  const experiment = env.COMMITISH_EXPERIMENT ?? '';
-  if (!/^[a-f0-9-]{36}$/.test(experiment)) throw new Error('Invalid experiment ID');
-  const requestURL = new URL(env.ACTIONS_ID_TOKEN_REQUEST_URL ?? '');
-  if (requestURL.protocol !== 'https:') throw new Error('OIDC request must use HTTPS');
-  requestURL.searchParams.set('audience', endpoint);
-  const identityResponse = await fetcher(requestURL, {
-    headers: {
-      authorization: `Bearer ${env.ACTIONS_ID_TOKEN_REQUEST_TOKEN}`
-    },
-    redirect: 'error',
-    signal: AbortSignal.timeout(10_000)
-  });
-  if (!identityResponse.ok) throw new Error(`GitHub OIDC request failed: HTTP ${identityResponse.status}`);
-  const { value: token } = await identityResponse.json();
-  if (typeof token !== 'string') throw new Error('GitHub returned no OIDC token');
-  // Unverified decoding only supplies event fields; the server verifies the signed identity.
-  const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
-  const phase = env.COMMITISH_PHASE;
-  const marker = env.COMMITISH_MARKER;
-  if (![
-    'started',
-    'completed'
-  ].includes(phase ?? '')) throw new Error('Invalid reporting phase');
-  if (marker && !/^[ABC]$/.test(marker)) throw new Error('Invalid observed marker');
-  const event = {
-    version: 1,
-    id: crypto.randomUUID(),
-    producer: `github.${claims.run_id}.${claims.run_attempt}.${claims.check_run_id}`,
-    sequence: phase === 'started' ? 0 : 1,
-    caseId: env.COMMITISH_CASE,
-    attempt: `${claims.run_id}:${claims.run_attempt}`,
-    kind: `job.${phase}`,
-    observedAt: new Date().toISOString(),
-    data: {
-      marker: marker ?? null,
-      status: env.COMMITISH_STATUS ?? null
-    }
-  };
-  // Keep the same event identity on transient errors/lost acknowledgements.
-  for(let attempt = 0; attempt < 12; attempt++){
-    let status = 0;
-    try {
-      const response = await fetcher(`${endpoint}/v1/experiments/${experiment}/events`, {
-        method: 'POST',
-        headers: {
-          authorization: `Bearer ${token}`,
-          'content-type': 'application/json'
-        },
-        body: JSON.stringify(event),
-        redirect: 'error',
-        signal: AbortSignal.timeout(10_000)
-      });
-      status = response.status;
-      if (response.ok) {
-        const receipt = await response.json();
-        if (receipt.id !== event.id) throw new Error('Collector receipt mismatch');
-        console.log(`Collector acknowledged ${event.kind} for ${event.caseId}`);
-        return;
-      }
-      await response.body?.cancel();
-    } catch (error) {
-      if (status !== 0) throw error;
-    }
-    // 403 briefly occurs while the controller registers the freshly dispatched run.
-    if (![
-      0,
-      403,
-      429,
-      500,
-      502,
-      503,
-      504
-    ].includes(status)) {
-      throw new Error(`Collector rejected job event: HTTP ${status}`);
-    }
-    if (attempt === 11) throw new Error(`Collector unavailable or grant missing: HTTP ${status}`);
-    await new Promise((resolve)=>setTimeout(resolve, 2000));
-  }
-})(process.env).catch(() => {
+            const endpointURL = new URL(env.COMMITISH_COLLECTOR ?? 'https://commitish.kjanat.dev');
+            if (endpointURL.protocol !== 'https:' || endpointURL.username || endpointURL.password || endpointURL.pathname !== '/' || endpointURL.search || endpointURL.hash) throw new Error('Collector must be an HTTPS origin');
+            const endpoint = endpointURL.origin;
+            const experiment = env.COMMITISH_EXPERIMENT ?? '';
+            if (!/^[a-f0-9-]{36}$/.test(experiment)) throw new Error('Invalid experiment ID');
+            const requestURL = new URL(env.ACTIONS_ID_TOKEN_REQUEST_URL ?? '');
+            if (requestURL.protocol !== 'https:') throw new Error('OIDC request must use HTTPS');
+            requestURL.searchParams.set('audience', endpoint);
+            const identityResponse = await fetcher(requestURL, {
+              headers: {
+                authorization: `Bearer ${env.ACTIONS_ID_TOKEN_REQUEST_TOKEN}`
+              },
+              redirect: 'error',
+              signal: AbortSignal.timeout(10_000)
+            });
+            if (!identityResponse.ok) throw new Error(`GitHub OIDC request failed: HTTP ${identityResponse.status}`);
+            const { value: token } = await identityResponse.json();
+            if (typeof token !== 'string') throw new Error('GitHub returned no OIDC token');
+            // Unverified decoding only supplies event fields; the server verifies the signed identity.
+            const claims = JSON.parse(Buffer.from(token.split('.')[1], 'base64url').toString());
+            const phase = env.COMMITISH_PHASE;
+            const marker = env.COMMITISH_MARKER;
+            if (![
+              'started',
+              'completed'
+            ].includes(phase ?? '')) throw new Error('Invalid reporting phase');
+            if (marker && !/^[ABC]$/.test(marker)) throw new Error('Invalid observed marker');
+            const event = {
+              version: 1,
+              id: crypto.randomUUID(),
+              producer: `github.${claims.run_id}.${claims.run_attempt}.${claims.check_run_id}`,
+              sequence: phase === 'started' ? 0 : 1,
+              caseId: env.COMMITISH_CASE,
+              attempt: `${claims.run_id}:${claims.run_attempt}`,
+              kind: `job.${phase}`,
+              observedAt: new Date().toISOString(),
+              data: {
+                marker: marker ?? null,
+                status: env.COMMITISH_STATUS ?? null
+              }
+            };
+            // Keep the same event identity on transient errors/lost acknowledgements.
+            for(let attempt = 0; attempt < 12; attempt++){
+              let status = 0;
+              try {
+                const response = await fetcher(`${endpoint}/v1/experiments/${experiment}/events`, {
+                  method: 'POST',
+                  headers: {
+                    authorization: `Bearer ${token}`,
+                    'content-type': 'application/json'
+                  },
+                  body: JSON.stringify(event),
+                  redirect: 'error',
+                  signal: AbortSignal.timeout(10_000)
+                });
+                status = response.status;
+                if (response.ok) {
+                  const receipt = await response.json();
+                  if (receipt.id !== event.id) throw new Error('Collector receipt mismatch');
+                  console.log(`Collector acknowledged ${event.kind} for ${event.caseId}`);
+                  return;
+                }
+                await response.body?.cancel();
+              } catch (error) {
+                if (status !== 0) throw error;
+              }
+              // 403 briefly occurs while the controller registers the freshly dispatched run.
+              if (![
+                0,
+                403,
+                429,
+                500,
+                502,
+                503,
+                504
+              ].includes(status)) {
+                throw new Error(`Collector rejected job event: HTTP ${status}`);
+              }
+              if (attempt === 11) throw new Error(`Collector unavailable or grant missing: HTTP ${status}`);
+              await new Promise((resolve)=>setTimeout(resolve, 2000));
+            }
+          })(process.env).catch(() => {
             console.error('Direct collector reporting failed');
             process.exitCode = 1;
           });
