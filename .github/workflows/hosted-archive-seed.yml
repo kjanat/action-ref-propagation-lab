@@ -1,4 +1,4 @@
-name: hosted-seed-7b86a938
+name: hosted-seed-c87595a7
 run-name: ${{ inputs.attempt }}
 on:
   workflow_dispatch:
@@ -119,7 +119,7 @@ jobs:
       - name: Download preregistered archive with OIDC
         shell: node {0}
         env:
-          ARCHIVE_DIGEST: 24b11ed9dba74aaa74f6f559323d2eb3f71da5d37287ec6be0fe7be6f9bb3816
+          ARCHIVE_DIGEST: 434f0fb715cd7d9cb774c2eefcafc346ddd21329ee4e6d7551c0e01839f439ed
           COMMITISH_COLLECTOR: https://evidence.commitish.kjanat.dev
           COMMITISH_EXPERIMENT: ${{ inputs.experiment }}
         run: |
@@ -145,7 +145,7 @@ jobs:
       - name: Install marked archive in the hosted runner archive cache
         shell: node {0}
         env:
-          ARCHIVE_DIGEST: 24b11ed9dba74aaa74f6f559323d2eb3f71da5d37287ec6be0fe7be6f9bb3816
+          ARCHIVE_DIGEST: 434f0fb715cd7d9cb774c2eefcafc346ddd21329ee4e6d7551c0e01839f439ed
           CACHE_KEY: actions_checkout/3d3c42e5aac5ba805825da76410c181273ba90b1.tar.gz
         run: |
           const crypto = require('node:crypto');
@@ -183,7 +183,7 @@ jobs:
           COMMITISH_EXPERIMENT: ${{ inputs.experiment }}
         run: |
           node --input-type=commonjs <<'COMMITISH_SEED_NODE'
-          const seed = {"protocol":1,"originId":"7b86a938-9486-4391-b6b0-14e2257aacc9","officialRepository":"actions/checkout","officialCommit":"3d3c42e5aac5ba805825da76410c181273ba90b1","pristineArchiveSha256":"ed255b2a39e4a6e37891d9983deed7e92376b60f1689c73d587495fdf97b3f89","instrumentedArchiveSha256":"24b11ed9dba74aaa74f6f559323d2eb3f71da5d37287ec6be0fe7be6f9bb3816","upstreamEntryPath":"dist/index.js","upstreamEntrySha256":"b604bf1c08a471aedf51ddddbd3e8d03041683db270692d66cd1b4b097457818","instrumentedEntrySha256":"ec0b8079dbf7c7e0f4aeb58681bbf055575d33ae803cc0bf576ae86df16afa6f","instrumenterSourceSha256":"619981891d37ef731172b1a321e5d7f26fe5f4242177dd147d6b45142e2155c3","cacheKey":"actions_checkout/3d3c42e5aac5ba805825da76410c181273ba90b1.tar.gz","allowlistedRepositories":["kajaux/action-ref-propagation-lab","kjanat/action-ref-propagation-lab"],"installation":"trusted-job"};
+          const seed = {"protocol":1,"originId":"c87595a7-7f1d-4426-92e6-7bd5b4081d1c","officialRepository":"actions/checkout","officialCommit":"3d3c42e5aac5ba805825da76410c181273ba90b1","pristineArchiveSha256":"ed255b2a39e4a6e37891d9983deed7e92376b60f1689c73d587495fdf97b3f89","instrumentedArchiveSha256":"434f0fb715cd7d9cb774c2eefcafc346ddd21329ee4e6d7551c0e01839f439ed","upstreamEntryPath":"dist/index.js","upstreamEntrySha256":"b604bf1c08a471aedf51ddddbd3e8d03041683db270692d66cd1b4b097457818","instrumentedEntrySha256":"58744977b141e93dd5e8eb160bd7e40d586b0fe32044d9fa98d5c5a7f53aa8b5","instrumenterSourceSha256":"619981891d37ef731172b1a321e5d7f26fe5f4242177dd147d6b45142e2155c3","cacheKey":"actions_checkout/3d3c42e5aac5ba805825da76410c181273ba90b1.tar.gz","allowlistedRepositories":["kajaux/action-ref-propagation-lab","kjanat/action-ref-propagation-lab"],"installation":"trusted-job"};
           (async () => {
             const endpoint = new URL(process.env.COMMITISH_COLLECTOR);
             if (endpoint.protocol !== 'https:' || endpoint.origin !== process.env.COMMITISH_COLLECTOR) throw new Error('Invalid collector');
@@ -220,7 +220,7 @@ jobs:
       - name: Create delayed composite dependency
         shell: bash
         env:
-          DEFINITION: bmFtZTogSG9zdGVkIGxhdGUgY2hlY2tvdXQgb2JzZXJ2ZXIKZGVzY3JpcHRpb246IFJlc29sdmUgY2hlY2tvdXQgb25seSBhZnRlciB0aGUgc2FtZSBqb2IgaW5zdGFsbHMgdGhlIG1hcmtlZCB0cmVlCnJ1bnM6CiAgdXNpbmc6IGNvbXBvc2l0ZQogIHN0ZXBzOgogICAgLSB1c2VzOiBhY3Rpb25zL2NoZWNrb3V0QDNkM2M0MmU1YWFjNWJhODA1ODI1ZGE3NjQxMGMxODEyNzNiYTkwYjEKICAgICAgd2l0aDoKICAgICAgICBjbGVhbjogZmFsc2UK
+          DEFINITION: bmFtZTogSG9zdGVkIGxhdGUgY2hlY2tvdXQgb2JzZXJ2ZXIKZGVzY3JpcHRpb246IFJlc29sdmUgY2hlY2tvdXQgb25seSBhZnRlciB0aGUgc2FtZSBqb2IgaW5zdGFsbHMgdGhlIG1hcmtlZCB0cmVlCnJ1bnM6CiAgdXNpbmc6IGNvbXBvc2l0ZQogIHN0ZXBzOgogICAgLSB1c2VzOiBhY3Rpb25zL2NoZWNrb3V0QDNkM2M0MmU1YWFjNWJhODA1ODI1ZGE3NjQxMGMxODEyNzNiYTkwYjEKICAgICAgd2l0aDoKICAgICAgICBjbGVhbjogZmFsc2UKICAgICAgICAjIEtlZXAgdGhpcyBkeW5hbWljYWxseSBjcmVhdGVkIHBhcmVudCBhY3Rpb24gYXZhaWxhYmxlIGZvciB0aGUKICAgICAgICAjIHJ1bm5lcidzIHBvc3QtYWN0aW9uIHRyYXZlcnNhbC4gQSBjaGVja291dCBpbnRvIHRoZSB3b3Jrc3BhY2Ugcm9vdAogICAgICAgICMgcmVwbGFjZXMgdGhlIGRpcmVjdG9yeSBjb250YWluaW5nIHRoaXMgYWN0aW9uOyB0aGUgbWFpbiBhY3Rpb24gdGhlbgogICAgICAgICMgc3VjY2VlZHMgYnV0IGl0cyByZWdpc3RlcmVkIHBvc3QgYWN0aW9uIGNhbm5vdCBiZSBsb2FkZWQuCiAgICAgICAgcGF0aDogLmNvbW1pdGlzaC12aWN0aW0tY2hlY2tvdXQK
         run: |
           mkdir -p .commitish-late-checkout
           printf '%s' "$DEFINITION" | base64 --decode > .commitish-late-checkout/action.yml
