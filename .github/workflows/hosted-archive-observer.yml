@@ -23,12 +23,6 @@ jobs:
         include:
           - id: linux-x64
             label: ubuntu-latest
-          - id: linux-arm64
-            label: ubuntu-24.04-arm
-          - id: macos-arm64
-            label: macos-15
-          - id: windows-x64
-            label: windows-2025
     runs-on: ${{ matrix.label }}
     timeout-minutes: 10
     steps:
